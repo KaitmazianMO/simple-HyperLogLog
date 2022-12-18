@@ -70,9 +70,30 @@ size_t hll_raw_estimate(const struct hll *hll)
 	return alpha_m_m / sum;
 }
 
+static size_t linear_counting(double size, double nzeros)
+{
+	return size * log(size / nzeros);
+}
+
+static size_t hll_count_zeros(const struct hll *hll)
+{
+	size_t count = 0;
+	for (size_t i = 0, size = hll_size(hll->precision); i < size; ++i)
+		if (hll->registers[i] == 0)
+			count += 1;
+	return count;
+}
+
 size_t hll_count_distinct(const struct hll *hll,
 			  const struct polynomial *correction)
 {
+	size_t nzeros = hll_count_zeros(hll);
+	if (nzeros != 0) {
+		size_t size = hll_size(hll->precision);
+		double lc_estimate = linear_counting(size, nzeros);
+		if (lc_estimate < 2.5 * size)
+			return lc_estimate;
+	}
 	double estimate = hll_raw_estimate(hll);
 	if (correction != NULL && estimate < 5 * hll_size(hll->precision))
 		estimate -= correction->calc(estimate, correction);

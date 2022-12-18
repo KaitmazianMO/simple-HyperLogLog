@@ -49,7 +49,7 @@ double calculate_bias_correction(double raw_estimate,
 polynomial *new_bias_correction(unsigned precision)
 {
 	double m = hll_size(precision);
-	struct point points[npoints] = { {0, 1*m}, {0, 2.5*m}, {0, 5*m} };
+	struct point points[npoints] = { {0, 2*m}, {0, 3*m}, {0, 5*m} };
 	for (int i = 0; i < npoints; ++i) {
 		struct hll *hll = hll_create(precision);
 		for (size_t n = 0; n < points[i].y; ++n)
