@@ -59,7 +59,7 @@ static double hll_alpha(size_t size)
 	}
 }
 
-size_t hll_count_distinct(const struct hll *hll)
+size_t hll_raw_estimate(const struct hll *hll)
 {
 	size_t size = hll_size(hll->precision);
 	double sum = 0;
@@ -68,4 +68,13 @@ size_t hll_count_distinct(const struct hll *hll)
 
 	double alpha_m_m = hll_alpha(size) * size * size;
 	return alpha_m_m / sum;
+}
+
+size_t hll_count_distinct(const struct hll *hll,
+			  const struct polynomial *correction)
+{
+	double estimate = hll_raw_estimate(hll);
+	if (correction != NULL && estimate < 5 * hll_size(hll->precision))
+		estimate -= correction->calc(estimate, correction);
+	return estimate;
 }
